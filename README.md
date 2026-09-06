@@ -89,25 +89,30 @@ only where the implementation guarantees it.
 
 <!-- tools:start -->
 
-_17 tools, read from https://cromanion.com/api/mcp on 2026-09-06._
+_22 tools, read from https://cromanion.com/api/mcp on 2026-09-06._
 
 | Tool | Effect | Repeatable | What it does |
 | --- | --- | --- | --- |
 | `cromanion_open_claim` | writes | no | Start signing your human up for Cromanion (the autonomous conversion agent) on a site you manage. |
 | `cromanion_verify_claim` | writes | yes | Redeem a claim once you have published one of its three proofs (a /.well-known file, a &lt;meta&gt; tag, or a DNS TXT record). |
 | `cromanion_site_status` | read | no | Check the site you provisioned: whether the tag is actually live (a beacon received from your own domain, not merely a snippet handed to you), how the crawl is going, and the plan. |
+| `cromanion_install_check` | read | no | Why the tag is not firing. |
 | `cromanion_upgrade_link` | writes | no | Get a Stripe Checkout link for a paid plan (pro or growth). |
 | `cromanion_grants` | read | no | List what your human has allowed this agent to do, and what they have not. |
 | `cromanion_pending` | read | no | Everything on this site that is waiting for a decision: page rewrites the agent wants to make, rules it distilled from real sessions, conversions it spotted but has never counted, and pages your traffic found that the crawl missed. |
+| `cromanion_config` | read | no | Everything IN FORCE on this site: the conversions that count, the facts you may state and the ones forbidden, which surfaces are enabled, the brand, and every distilled rule WITH its status. |
 | `cromanion_decide` | writes | yes | Rule on one thing from cromanion_pending: pass its `kind` and `id` back unchanged with a decision. |
+| `cromanion_set_playbook` | **replaces** | no | Reword a distilled rule, or ask for a fresh distillation. |
+| `cromanion_mark_read` | writes | yes | Mark notifications read once you have passed them on to your human. |
 | `cromanion_impact` | read | no | What the agent has actually changed: visitors who saw it versus the 10% held back as a control. |
 | `cromanion_set_mode` | writes | yes | Switch the agent on. |
-| `cromanion_add_goal` | writes | yes | Define a conversion to count. |
+| `cromanion_add_goal` | writes | yes | Define a conversion to count, or change one you already defined. |
 | `cromanion_crawl` | writes | no | Re-read the site, and name the pages that matter most so they are read first. |
 | `cromanion_claim_domain` | **replaces** | yes | Claim another host for this site so its traffic counts, or give one up with `remove: true`. |
 | `cromanion_set_voice` | **replaces** | yes | Write the facts the agent may state to visitors, and the things it must never say. |
 | `cromanion_surfaces` | **replaces** | yes | Choose where the agent may speak and what those places look like: which layout surfaces are enabled, whether the exit modal is allowed, custom CSS, and per-surface HTML. |
 | `cromanion_set_holdout` | **replaces** | yes | Set the share of visitors held back from the agent so its effect stays measurable (0.05–0.5). |
+| `cromanion_exclusions` | **replaces** | yes | Put an excluded device back into the measurement. |
 | `cromanion_set_brand` | writes | yes | Adjust the palette, fonts and button styling the agent paints its surfaces with. |
 | `cromanion_lead_destination` | **replaces** | yes | Set where captured leads are delivered: an https webhook, a connected HubSpot portal, or off. |
 
@@ -121,10 +126,13 @@ node scripts/refresh-tools.mjs
 
 ## Protocol
 
-Streamable HTTP, POST only. The server currently speaks the `initialize` handshake of protocol
-version **`2025-06-18`**. Support for the per-request metadata of `2026-07-28` — and the
-`server/discover` that goes with it — is built and awaiting deploy; this section will say so once it
-is live rather than before.
+Streamable HTTP, POST only, and **dual-era**: the server answers both the `initialize` handshake of
+`2025-06-18` and the per-request metadata of `2026-07-28`, choosing by the shape of the request. A
+modern client declares its version in `params._meta` and the `MCP-Protocol-Version` header;
+`server/discover` reports what is supported.
+
+An unsupported version comes back as `400` with `-32022` and the list of versions we do speak, rather
+than the undefined behaviour the spec warns a legacy-only server produces.
 
 It never pushes, so every request is answered with a single JSON object rather than an SSE stream.
 There is no stream endpoint and there are no sessions: the server neither mints nor echoes
