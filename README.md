@@ -42,8 +42,8 @@ regenerates the tool reference from the live endpoint so it cannot quietly go st
 }
 ```
 
-You can connect with **no `Authorization` header**. `initialize`, `tools/list` and
-`cromanion_open_claim` need no credential. Every other tool takes `Authorization: Bearer …`, with
+You can connect with **no `Authorization` header**. `initialize`, `tools/list`,
+`cromanion_errors` and `cromanion_open_claim` need no credential. Every other tool takes `Authorization: Bearer …`, with
 one of two credentials:
 
 - **An API key** from the developer console (<https://cromanion.com/dev/keys>), for the Live Visit
@@ -176,8 +176,9 @@ Streamable HTTP, POST only, and **dual-era**: the server answers both the `initi
 modern client declares its version in `params._meta` and the `MCP-Protocol-Version` header;
 `server/discover` reports what is supported.
 
-An unsupported version comes back as `400` with `-32022` and the list of versions we do speak, rather
-than the undefined behaviour the spec warns a legacy-only server produces.
+In the `2026-07-28` shape, an unsupported version comes back as `400` with `-32022` and the list of
+versions we do speak. A legacy `initialize` asking for a version we do not know is answered with
+`2025-06-18`, as that handshake prescribes.
 
 It never pushes, so every request is answered with a single JSON object rather than an SSE stream.
 There is no stream endpoint and there are no sessions: the server neither mints nor echoes
