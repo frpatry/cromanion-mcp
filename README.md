@@ -1,5 +1,7 @@
 # Cromanion MCP server
 
+[![Cromanion MCP connector](https://glama.ai/mcp/connectors/com.cromanion/cromanion/badges/score.svg)](https://glama.ai/mcp/connectors/com.cromanion/cromanion)
+
 **The conversion agent that runs itself.** A site pastes one tag; an AI that has read the site
 watches every session live, predicts the visitor's next move, and intervenes at the right moment to
 push toward conversion. Impact is proven causally against a permanent 10% holdout and written back
